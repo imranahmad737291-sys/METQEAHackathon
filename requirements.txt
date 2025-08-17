@@ -1,0 +1,36 @@
+# google-generativeai
+# requests
+# python-dotenv
+# selenium
+
+
+# streamlit
+# google-generativeai
+# requests
+# python-dotenv
+# selenium
+
+# Core app
+streamlit
+
+# Google + API usage
+google-generativeai
+requests
+python-dotenv
+
+# Test automation (if needed in features)
+selenium
+
+# RFP document generation
+python-docx
+reportlab
+pillow
+
+# ROI calculator visualization
+plotly
+kaleido
+
+# Optional: for data wrangling
+pandas
+openpyxl
+

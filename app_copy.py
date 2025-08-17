@@ -1,0 +1,1107 @@
+# --- API Helper Tab ---
+import requests
+import json
+import os
+import streamlit as st
+
+def api_helper_tab(base_prefix="api_helper"):
+    prefix = base_prefix
+
+
+    url = st.text_input(
+        "API URL",
+        "https://jsonplaceholder.typicode.com/posts",
+        key=f"{prefix}_url"
+    )
+
+    method = st.selectbox(
+        "HTTP Method",
+        ["GET", "POST", "PUT", "DELETE"],
+        index=0,
+        key=f"{prefix}_method"
+    )
+
+    headers = st.text_area(
+        "Headers (JSON)",
+        value="{}",
+        height=80,
+        key=f"{prefix}_headers"
+    )
+
+    body = st.text_area(
+        "Body (JSON, only for POST/PUT)",
+        value="{}",
+        height=150,
+        key=f"{prefix}_body"
+    )
+
+    if st.button("Send Request", key=f"{prefix}_send"):
+        st.write("Sending request...")
+
+# Example usage:
+# One instance:
+# api_helper_tab("api_helper_tab1")
+#
+# Multiple instances:
+# api_helper_tab("api_helper_tab1")
+# api_helper_tab("api_helper_tab2")
+# api_helper_tab("api_helper_tab3")
+#
+# Or in a loop:
+# for i in range(3):
+#     api_helper_tab(f"api_helper_tab{i+1}")
+
+
+
+# import streamlit as st
+# import os
+# from feature_generator import generate_feature_file, generate_step_definitions
+# from config import setup_genai
+# import zipfile
+
+# # Hardcoded Gemini setup
+# setup_genai()
+
+# st.set_page_config(page_title="Feature & Step Definition Generator", layout="wide")
+# st.title("\U0001F31F Feature & Step Definition Generator")
+
+# st.markdown("""
+#     Enter your requirement below or **upload a `.txt` file**.
+#     Use the buttons to generate either the **feature file** or **step definitions**.
+# """)
+
+# # Upload requirement file
+# uploaded_file = st.file_uploader("\U0001F4CE Upload Requirement File (.txt)", type=["txt"])
+
+# # Optional manual input
+# requirement_text = ""
+# text_input = st.text_area("\U0001F4DD Requirement Input", placeholder="e.g., As a user, I want to log in using email and password...")
+
+# # Language selector
+# language = st.selectbox("Select Language for Step Definitions", ["Python", "Java", "JavaScript"], index=0)
+
+# if uploaded_file:
+#     requirement_text = uploaded_file.read().decode("utf-8")
+# elif text_input:
+#     requirement_text = text_input
+
+# # Buttons layout
+# col1, col2 = st.columns(2)
+
+# with col1:
+#     if st.button("🟢 Generate Feature File") and requirement_text:
+#         with st.spinner("Generating feature file..."):
+#             feature_output = generate_feature_file(requirement_text)
+#             st.text_area("Generated Feature File", value=feature_output, height=300)
+#             os.makedirs("output/features", exist_ok=True)
+#             with open("output/features/generated.feature", "w") as f:
+#                 f.write(feature_output)
+
+# with col2:
+#     if st.button("🔵 Generate Step Definitions") and requirement_text:
+#         with st.spinner("Generating step definitions..."):
+#             steps_output = generate_step_definitions(requirement_text, language)
+#             st.text_area("Generated Step Definitions", value=steps_output, height=300)
+#             os.makedirs("output/scripts/steps", exist_ok=True)
+#             with open("output/scripts/steps/step_definitions.py", "w") as f:
+#                 f.write(steps_output)
+
+# # ZIP Download
+# if os.path.exists("output/features/generated.feature") and os.path.exists("output/scripts/steps/step_definitions.py"):
+#     zip_path = "generated_project.zip"
+#     with zipfile.ZipFile(zip_path, "w") as zipf:
+#         zipf.write("output/features/generated.feature", arcname="features/generated.feature")
+#         zipf.write("output/scripts/steps/step_definitions.py", arcname="scripts/steps/step_definitions.py")
+
+#     with open(zip_path, "rb") as f:
+#         st.download_button("📦 Download Project ZIP", f, file_name="generated_project.zip")
+
+
+
+# updated code for xpath inspector
+
+import streamlit as st
+st.set_page_config(page_title="AI Test Automation Utility", layout="wide")
+# Inject custom CSS for navy blue background
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #001f3f !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+import base64
+
+# Inject custom CSS for blue theme, table, buttons, and responsiveness
+st.markdown('''
+<style>
+body, .main, .block-container { background-color: #F0F8FF !important; }
+.blue-title { text-align: center; font-size: 2.6rem; font-weight: bold; color: #1E90FF; margin-bottom: 0.2em; }
+.subtitle { text-align: center; font-size: 1.1rem; color: #1E90FF; margin-bottom: 1.5em; }
+.section-header { font-size: 1.3rem; font-weight: bold; color: #1565C0; margin-top: 1.5em; margin-bottom: 0.5em; }
+.blue-btn { background: #1E90FF; color: #fff; border: none; border-radius: 6px; padding: 0.5em 1.2em; font-size: 1rem; font-weight: 600; cursor: pointer; margin: 0.2em; transition: background 0.2s; }
+.blue-btn:hover { background: #1565C0; }
+.xpath-table { width: 100%; border-collapse: collapse; margin-top: 1em; }
+.xpath-table th { background: #1E90FF; color: #fff; font-weight: 600; padding: 0.5em; }
+.xpath-table td { background: #E6F0FA; color: #000; padding: 0.5em; }
+.xpath-table tr:nth-child(even) td { background: #F0F8FF; }
+.xpath-table tr:hover td { background: #B3D1FF; }
+@media (max-width: 900px) {
+  .blue-title { font-size: 2rem; }
+  .section-header { font-size: 1.1rem; }
+  .xpath-table th, .xpath-table td { font-size: 0.95rem; }
+}
+</style>
+''', unsafe_allow_html=True)
+
+# Centered app title and subtitle
+import os
+import subprocess
+import time
+from config import setup_genai
+from feature_generator import generate_feature_file, generate_step_definitions
+st.markdown('<div class="blue-title">🤖 AI Test Automation Utility</div>', unsafe_allow_html=True)
+st.markdown('<div class="subtitle">Modern UI for Feature & XPath Extraction</div>', unsafe_allow_html=True)
+
+# Setup Gemini API
+setup_genai()
+
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    "📄 Feature & Step Generator",
+    "🧪 XPath Inspector",
+    "📂 Output Files",
+    "📊 Pipeline ROI Calculator",
+    "📑 RFP Generator – Cognizant Branded",
+    "🔗 API Helper"
+])
+
+
+
+def api_helper_tab(prefix="api_helper_tab1"):
+    st.subheader("🔌 API Helper")
+
+    # API URL input
+    url = st.text_input(
+        "API URL",
+        "https://jsonplaceholder.typicode.com/posts",
+        key=f"{prefix}_url"
+    )
+
+    # HTTP Method selector
+    method = st.selectbox(
+        "HTTP Method",
+        ["GET", "POST", "PUT", "DELETE"],
+        index=0,
+        key=f"{prefix}_method"
+    )
+
+    # Headers input
+    headers = st.text_area(
+        "Headers (JSON)",
+        value="{}",
+        height=80,
+        key=f"{prefix}_headers"
+    )
+
+    # Body input (for POST/PUT)
+    body = st.text_area(
+        "Body (JSON, only for POST/PUT)",
+        value="{}",
+        height=150,
+        key=f"{prefix}_body"
+    )
+
+    # Send request button
+    if st.button("Send Request", key=f"{prefix}_send"):
+        try:
+            # Parse headers & body safely
+            headers_dict = json.loads(headers) if headers.strip() else {}
+            data_dict = json.loads(body) if body.strip() else {}
+
+            # Perform request
+            if method == "GET":
+                response = requests.get(url, headers=headers_dict)
+            elif method == "POST":
+                response = requests.post(url, headers=headers_dict, json=data_dict)
+            elif method == "PUT":
+                response = requests.put(url, headers=headers_dict, json=data_dict)
+            elif method == "DELETE":
+                response = requests.delete(url, headers=headers_dict)
+
+            # Show response
+            st.markdown("### Response Status")
+            st.code(f"{response.status_code}", language="python")
+
+            st.markdown("### Response Body")
+            try:
+                st.json(response.json())
+            except Exception:
+                st.text(response.text)
+
+        except Exception as e:
+            st.error(f"❌ Error: {str(e)}")
+            req_body = body if (method in ["POST", "PUT"] and body) else None
+            start = datetime.now()
+            resp = requests.request(method, url, headers=headers_dict, data=req_body)
+            elapsed = (datetime.now() - start).total_seconds() * 1000
+            try:
+                resp_json = resp.json()
+                resp_body = json.dumps(resp_json, indent=2)
+                is_json = True
+            except Exception:
+                resp_body = resp.text
+                is_json = False
+            # Save to session history
+            st.session_state['api_history'].append({
+                'method': method,
+                'url': url,
+                'headers': headers,
+                'body': body,
+                'timestamp': datetime.now().isoformat()
+            })
+            if len(st.session_state['api_history']) > 5:
+                st.session_state['api_history'] = st.session_state['api_history'][-5:]
+            # Display response
+            st.markdown(f"**Status Code:** {resp.status_code}")
+            st.markdown(f"**Response Time:** {elapsed:.1f} ms")
+            with st.expander("Response Headers"):
+                st.json(dict(resp.headers))
+            st.markdown("**Response Body:**")
+            if is_json:
+                st.json(resp_json)
+            else:
+                st.text(resp_body)
+        except Exception as e:
+            st.error(f"Error: {e}")
+with tab6:
+    pass
+
+def rfp_tab():
+    st.markdown("<div class='section-header'>📑 RFP Generator – Cognizant Branded</div>", unsafe_allow_html=True)
+    with st.form("rfp_form"):
+        client_name = st.text_input("Client Name")
+        project_name = st.text_input("Project Name")
+        scope = st.multiselect("Scope of Testing", ["Functional", "Regression", "API", "Performance", "Security"])
+        tools = st.multiselect("Tools & Frameworks", ["Selenium", "Playwright", "Cypress", "PyTest", "Appium", "JMeter", "ADF Testing"])
+        test_case_count = st.number_input("Estimated Test Case Count", min_value=1, value=100)
+        automation_percent = st.slider("Automation % Planned", 0, 100, value=70)
+        execution_cycles = st.number_input("Execution Cycles per Sprint", min_value=1, value=2)
+        st.markdown("**Complexity Split (% of Test Cases):**")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            simple_percent = st.slider("Simple %", 0, 100, value=40, key="simple_slider")
+        with col2:
+            medium_percent = st.slider("Medium %", 0, 100, value=40, key="medium_slider")
+        with col3:
+            complex_percent = st.slider("Complex %", 0, 100, value=20, key="complex_slider")
+        risks = st.text_area("Risks & Mitigation", height=100)
+        submitted = st.form_submit_button("Generate RFP")
+    if submitted:
+        percent_sum = simple_percent + medium_percent + complex_percent
+        if percent_sum != 100:
+            st.error(f"Complexity percentages must sum to 100%. Current sum: {percent_sum}")
+        else:
+            data = {
+                "client_name": client_name,
+                "project_name": project_name,
+                "scope": scope,
+                "tools": tools,
+                "test_case_count": test_case_count,
+                "automation_percent": automation_percent,
+                "execution_cycles": execution_cycles,
+                "simple_percent": simple_percent,
+                "medium_percent": medium_percent,
+                "complex_percent": complex_percent,
+                "risks": risks,
+                "date": datetime.now().strftime("%B %d, %Y"),
+                "logo_path": "assets/cognizant_logo.png" if os.path.exists("assets/cognizant_logo.png") else None
+            }
+            word_buf = generate_word_rfp(data)
+            pdf_buf = generate_pdf_rfp(data)
+            st.success("RFP documents generated!")
+            if word_buf is not None:
+                st.download_button(
+                    label="📥 Download RFP Document (Word)",
+                    data=word_buf,
+                    file_name=f"RFP_{client_name}_{project_name}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
+            else:
+                st.error("Failed to generate Word document. Please check your input.")
+            if pdf_buf is not None:
+                st.download_button(
+                    label="📥 Download RFP Document (PDF)",
+                    data=pdf_buf,
+                    file_name=f"RFP_{client_name}_{project_name}.pdf",
+                    mime="application/pdf"
+                )
+            else:
+                st.error("Failed to generate PDF document. Please check your input.")
+    hdr_cells[1].text = "Manual Testing"
+    hdr_cells[2].text = "Automation (Est.)"
+    for i in range(3):
+        for p in hdr_cells[i].paragraphs:
+            for run in p.runs:
+                run.font.bold = True
+                run.font.color.rgb = RGBColor(0, 128, 192)
+    table.rows[1].cells[0].text = "Effort (hrs)"
+    table.rows[1].cells[1].text = f"{manual_effort:.1f}"
+    table.rows[1].cells[2].text = f"{automation_effort:.1f}"
+    table.rows[2].cells[0].text = "Maintenance (hrs)"
+    table.rows[2].cells[1].text = f"-"
+    table.rows[2].cells[2].text = f"{maintenance_effort:.1f}"
+    table.rows[3].cells[0].text = "Net Savings (hrs)"
+    table.rows[3].cells[1].text = f"-"
+    table.rows[3].cells[2].text = f"{net_savings:.1f}"
+    table.rows[4].cells[0].text = "ROI (%)"
+    table.rows[4].cells[1].text = f"-"
+    table.rows[4].cells[2].text = f"{roi:.1f}"
+    table.rows[5].cells[0].text = "Test Case Count"
+    table.rows[5].cells[1].text = f"{tc}"
+    table.rows[5].cells[2].text = f"{tc}"
+    # Right-align numbers
+    for row in table.rows[1:]:
+        for cell in row.cells[1:]:
+            for p in cell.paragraphs:
+                p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    # Commentary
+    doc.add_paragraph(f"With ~{content['automation_percent']}% automation coverage, client achieves faster cycles and measurable cost savings.")
+    # Chart (ROI/Effort Savings)
+    try:
+        fig, ax = plt.subplots(figsize=(4,2))
+        ax.bar(["Manual", "Automation"], [manual_effort, automation_effort], color=["#0033A0", "#00BCD4"])
+        ax.set_ylabel("Effort (hrs)")
+        ax.set_title("Effort Comparison")
+        plt.tight_layout()
+        tmp_chart = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+        plt.savefig(tmp_chart.name)
+        plt.close(fig)
+        doc.add_picture(tmp_chart.name, width=Inches(3.5))
+    except Exception:
+        pass
+    # Risks & Mitigation
+    add_section_header(doc, "Risks & Mitigation")
+    risks = content['risks'] or "No major risks identified."
+    risks_table = doc.add_table(rows=1, cols=2)
+    risks_table.style = 'Table Grid'
+    risks_table.cell(0,0).text = "Risk"
+    risks_table.cell(0,1).text = "Mitigation"
+    for p in risks_table.row_cells(0):
+        for run in p.paragraphs[0].runs:
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(0, 51, 160)
+    # If risks are in format "risk: mitigation", split and add rows
+    for line in risks.split('\n'):
+        if ':' in line:
+            risk, mitigation = line.split(':', 1)
+            row = risks_table.add_row().cells
+            row[0].text = risk.strip()
+            row[1].text = mitigation.strip()
+    # Business Benefits
+    add_section_header(doc, "Business Benefits")
+    benefits = f"- Up to {content['automation_percent']}% automation coverage\n- Accelerated release cycles and reduced time-to-market\n- Improved test accuracy and defect detection\n- Scalable solution for future growth"
+    benefits_table = doc.add_table(rows=1, cols=2)
+    benefits_table.style = 'Table Grid'
+    benefits_table.cell(0,0).text = "Benefit"
+    benefits_table.cell(0,1).text = "Impact"
+    for p in benefits_table.row_cells(0):
+        for run in p.paragraphs[0].runs:
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(0, 51, 160)
+    for line in benefits.split('\n'):
+        if '-' in line:
+            benefit = line.replace('-', '').strip()
+            row = benefits_table.add_row().cells
+            row[0].text = benefit
+            row[1].text = "Positive business impact"
+    # Cognizant Differentiators
+    add_section_header(doc, "Cognizant Differentiators")
+    diff = "Cognizant brings proprietary accelerators, AI-driven script generation, and deep domain expertise to deliver superior automation outcomes. Our solutions are tailored for rapid onboarding, robust coverage, and measurable ROI."
+    diff_table = doc.add_table(rows=1, cols=2)
+    diff_table.style = 'Table Grid'
+    diff_table.cell(0,0).text = "Differentiator"
+    diff_table.cell(0,1).text = "Value"
+    for p in diff_table.row_cells(0):
+        for run in p.paragraphs[0].runs:
+            run.font.bold = True
+            run.font.color.rgb = RGBColor(0, 51, 160)
+    for sentence in diff.split('.'):
+        if sentence.strip():
+            row = diff_table.add_row().cells
+            row[0].text = sentence.strip()
+            row[1].text = "Client advantage"
+    buf = io.BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return buf
+
+    buf = io.BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return buf
+# Helper to build RFP PDF from content dict
+def generate_rfp_pdf(content):
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    width, height = A4
+    c.setFont("Helvetica-Bold", 24)
+    c.setFillColor(HexColor("#0033A0"))
+    c.drawCentredString(width/2, height-80, "Winning RFP Response – Test Automation Services")
+    c.setFont("Helvetica", 14)
+    c.setFillColor(HexColor("#000000"))
+    y = height-120
+    c.drawString(80, y, f"Client: {content['client_name']}")
+    y -= 25
+    c.drawString(80, y, f"Project: {content['project_name']}")
+    y -= 25
+    c.drawString(80, y, f"Prepared by: Cognizant Technology Solutions")
+    y -= 25
+    c.drawString(80, y, f"Date: {content['date']}")
+    c.showPage()
+    def section(title, body):
+        c.setFont("Helvetica-Bold", 16)
+        c.setFillColor(HexColor("#1565C0"))
+        c.drawString(60, height-80, title)
+        c.setFont("Helvetica", 12)
+        c.setFillColor(HexColor("#000000"))
+        text = c.beginText(60, height-110)
+        for line in body.split("\n"):
+            text.textLine(line)
+        c.drawText(text)
+        c.showPage()
+    section("Executive Summary", f"Cognizant proposes a robust test automation solution for {content['client_name']} ({content['project_name']}) to accelerate quality delivery, reduce manual effort, and enable faster releases. Our approach leverages proven frameworks, domain expertise, and AI-driven accelerators to maximize ROI and minimize risk.")
+    section("Scope of Testing", "\n".join([f"- {s}" for s in content['scope']]))
+    section("Tools & Frameworks", "\n".join([f"- {t}" for t in content['tools']]))
+    section("CI/CD Integration", "Seamless integration with CI/CD pipelines (Jenkins, GitHub Actions, Azure DevOps) ensures automated test execution and rapid feedback in every sprint.")
+    tc = content['test_case_count']
+    cycles = content['execution_cycles']
+    simple = content.get('simple_percent', 40)
+    medium = content.get('medium_percent', 40)
+    complex = content.get('complex_percent', 20)
+    manual_effort = tc * 0.5 * cycles
+    automation_effort = (simple/100*tc*1) + (medium/100*tc*3) + (complex/100*tc*6)
+    maintenance_effort = tc * 0.2 * cycles
+    net_savings = manual_effort - maintenance_effort
+    roi = (net_savings / manual_effort * 100) if manual_effort else 0
+    effort_table = f"Manual Effort (hrs): {manual_effort:.1f}\nAutomation Build Effort (hrs): {automation_effort:.1f}\nMaintenance Effort (hrs): {maintenance_effort:.1f}\nNet Savings (hrs): {net_savings:.1f}\nROI (%): {roi:.1f}\nTest Case Count: {tc}"
+    section("Effort & ROI Summary", effort_table)
+    section("Risks & Mitigation", content['risks'] or "No major risks identified.")
+    section("Business Benefits", f"- Up to {content['automation_percent']}% automation coverage\n- Accelerated release cycles and reduced time-to-market\n- Improved test accuracy and defect detection\n- Scalable solution for future growth")
+    section("Cognizant Differentiators", "Cognizant brings proprietary accelerators, AI-driven script generation, and deep domain expertise to deliver superior automation outcomes. Our solutions are tailored for rapid onboarding, robust coverage, and measurable ROI.")
+    c.save()
+    buf.seek(0)
+    return buf
+import io
+from datetime import datetime
+from docx import Document
+from docx.shared import Pt, RGBColor
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.colors import HexColor
+from reportlab.lib.utils import ImageReader
+
+def generate_word_rfp(data):
+    try:
+        from docx import Document
+        from docx.shared import Pt, RGBColor, Inches
+        from docx.enum.text import WD_ALIGN_PARAGRAPH
+        import io
+        import tempfile
+        import matplotlib.pyplot as plt
+        doc = Document()
+        # Title
+        doc.add_paragraph()
+        p = doc.add_paragraph()
+        run = p.add_run("Winning RFP Response – Test Automation Services")
+        run.font.size = Pt(28)
+        run.font.bold = True
+        run.font.color.rgb = RGBColor(0, 51, 160)
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        doc.add_paragraph()
+        # Logo
+        if data.get("logo_path"):
+            try:
+                doc.add_picture(data["logo_path"], width=Pt(120))
+            except Exception as e:
+                print(f"Logo error: {e}")
+        # Centered client/project/prepared/date
+        for line in [
+            f"Client: {data['client_name']}",
+            f"Project: {data['project_name']}",
+            f"Prepared by: Cognizant Technology Solutions",
+            f"Date: {data['date']}"
+        ]:
+            para = doc.add_paragraph(line)
+            para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        doc.add_page_break()
+        # Executive Summary
+        heading = doc.add_heading("Executive Summary", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        doc.add_paragraph(f"Cognizant proposes a robust test automation solution for {data['client_name']} ({data['project_name']}) to accelerate quality delivery, reduce manual effort, and enable faster releases. Our approach leverages proven frameworks, domain expertise, and AI-driven accelerators to maximize ROI and minimize risk.")
+        # Scope of Testing
+        heading = doc.add_heading("Scope of Testing", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        for s in data['scope']:
+            run = doc.add_paragraph().add_run(f"✔ {s}")
+            run.font.color.rgb = RGBColor(0, 51, 160)
+            run.font.size = Pt(12)
+        # Tools & Frameworks
+        heading = doc.add_heading("Tools & Frameworks", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        for t in data['tools']:
+            run = doc.add_paragraph().add_run(f"✔ {t}")
+            run.font.color.rgb = RGBColor(0, 51, 160)
+            run.font.size = Pt(12)
+        # CI/CD Integration
+        heading = doc.add_heading("CI/CD Integration", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        doc.add_paragraph("Seamless integration with CI/CD pipelines (Jenkins, GitHub Actions, Azure DevOps) ensures automated test execution and rapid feedback in every sprint.")
+        # Effort & ROI Summary Table
+        heading = doc.add_heading("Effort & ROI Summary", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        tc = data['test_case_count']
+        cycles = data['execution_cycles']
+        simple = data.get('simple_percent', 40)
+        medium = data.get('medium_percent', 40)
+        complex = data.get('complex_percent', 20)
+        manual_effort = tc * 0.5 * cycles
+        automation_effort = (simple/100*tc*1) + (medium/100*tc*3) + (complex/100*tc*6)
+        maintenance_effort = tc * 0.2 * cycles
+        net_savings = manual_effort - maintenance_effort
+        roi = (net_savings / manual_effort * 100) if manual_effort else 0
+        table = doc.add_table(rows=6, cols=3)
+        table.style = 'Table Grid'
+        hdr_cells = table.rows[0].cells
+        hdr_cells[0].text = "Metric"
+        hdr_cells[1].text = "Manual Testing"
+        hdr_cells[2].text = "Automation (Est.)"
+        # Make header row bold and blue
+        for cell in hdr_cells:
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.font.bold = True
+                    run.font.color.rgb = RGBColor(0, 51, 160)
+        table.rows[1].cells[0].text = "Effort (hrs)"
+        table.rows[1].cells[1].text = f"{manual_effort:.1f}"
+        table.rows[1].cells[2].text = f"{automation_effort:.1f}"
+        table.rows[2].cells[0].text = "Maintenance (hrs)"
+        table.rows[2].cells[1].text = f"-"
+        table.rows[2].cells[2].text = f"{maintenance_effort:.1f}"
+        table.rows[3].cells[0].text = "Net Savings (hrs)"
+        table.rows[3].cells[1].text = f"-"
+        table.rows[3].cells[2].text = f"{net_savings:.1f}"
+        table.rows[4].cells[0].text = "ROI (%)"
+        table.rows[4].cells[1].text = f"-"
+        table.rows[4].cells[2].text = f"{roi:.1f}"
+        table.rows[5].cells[0].text = "Test Case Count"
+        table.rows[5].cells[1].text = f"{tc}"
+        table.rows[5].cells[2].text = f"{tc}"
+        # Right-align numbers
+        for row in table.rows[1:]:
+            for cell in row.cells[1:]:
+                for p in cell.paragraphs:
+                    p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+        # Commentary
+        doc.add_paragraph(f"With ~{data['automation_percent']}% automation coverage, client achieves faster cycles and measurable cost savings.")
+        # Risks & Mitigation
+        heading = doc.add_heading("Risks & Mitigation", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        risks = data['risks'] or "No major risks identified."
+        risks_table = doc.add_table(rows=1, cols=2)
+        risks_table.style = 'Table Grid'
+        risks_table.cell(0,0).text = "Risk"
+        risks_table.cell(0,1).text = "Mitigation"
+        for cell in risks_table.rows[0].cells:
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.font.bold = True
+                    run.font.color.rgb = RGBColor(0, 51, 160)
+        for line in risks.split('\n'):
+            if ':' in line:
+                risk, mitigation = line.split(':', 1)
+                row = risks_table.add_row().cells
+                row[0].text = risk.strip()
+                row[1].text = mitigation.strip()
+        # Business Benefits
+        heading = doc.add_heading("Business Benefits", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        benefits = f"- Up to {data['automation_percent']}% automation coverage\n- Accelerated release cycles and reduced time-to-market\n- Improved test accuracy and defect detection\n- Scalable solution for future growth"
+        benefits_table = doc.add_table(rows=1, cols=2)
+        benefits_table.style = 'Table Grid'
+        benefits_table.cell(0,0).text = "Benefit"
+        benefits_table.cell(0,1).text = "Impact"
+        for cell in benefits_table.rows[0].cells:
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.font.bold = True
+                    run.font.color.rgb = RGBColor(0, 51, 160)
+        for line in benefits.split('\n'):
+            if '-' in line:
+                benefit = line.replace('-', '').strip()
+                row = benefits_table.add_row().cells
+                row[0].text = benefit
+                row[1].text = "Positive business impact"
+        # Cognizant Differentiators
+        heading = doc.add_heading("Cognizant Differentiators", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        diff = "Cognizant brings proprietary accelerators, AI-driven script generation, and deep domain expertise to deliver superior automation outcomes. Our solutions are tailored for rapid onboarding, robust coverage, and measurable ROI."
+        diff_table = doc.add_table(rows=1, cols=2)
+        diff_table.style = 'Table Grid'
+        diff_table.cell(0,0).text = "Differentiator"
+        diff_table.cell(0,1).text = "Value"
+        for cell in diff_table.rows[0].cells:
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.font.bold = True
+                    run.font.color.rgb = RGBColor(0, 51, 160)
+        for sentence in diff.split('.'):
+            if sentence.strip():
+                row = diff_table.add_row().cells
+                row[0].text = sentence.strip()
+                row[1].text = "Client advantage"
+
+        # --- Add New Sections ---
+        heading = doc.add_heading("About Cognizant", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        doc.add_paragraph(
+            "Cognizant is a global leader in IT consulting, technology, and business process services. "
+            "With deep domain expertise across Banking, Insurance, Healthcare, Retail, and Manufacturing, "
+            "we partner with clients to accelerate digital transformation, drive efficiency, and deliver measurable business outcomes."
+        )
+
+        heading = doc.add_heading("Proposed Solution Architecture", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        doc.add_paragraph(
+            "Our proposed solution architecture is based on a modular, scalable automation framework that integrates seamlessly with CI/CD pipelines. "
+            "It supports cross-browser testing, mobile automation, API validation, and performance testing, ensuring a holistic quality assurance approach."
+        )
+        # Insert diagram if available
+        try:
+            doc.add_picture("assets/test-automation-framework.png", width=Inches(5))
+        except Exception:
+            pass
+
+        heading = doc.add_heading("Quality Assurance & Governance", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        doc.add_paragraph(
+            "Our QA governance framework includes defined KPIs, regular stakeholder reporting, and quality gates integrated into the DevOps pipeline. "
+            "We ensure compliance with organizational standards, risk-based testing, and continuous improvement."
+        )
+
+        heading = doc.add_heading("Assumptions & Dependencies", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        doc.add_paragraph(
+            "• Test environment readiness and stability is ensured by the client.\n"
+            "• Test data will be provisioned or masked in compliance with data privacy regulations.\n"
+            "• Access to required APIs, services, and third-party systems will be provided.\n"
+            "• Any changes in scope will follow the agreed change management process."
+        )
+
+        heading = doc.add_heading("Contact Information", level=1)
+        for run in heading.runs:
+            run.font.bold = True
+        doc.add_paragraph(
+            "Cognizant Technology Solutions\n"
+            "Global Headquarters: Teaneck, NJ, USA\n"
+            "Website: www.cognizant.com\n"
+            "Contact: qa.solutions@cognizant.com"
+        )
+
+        buf = io.BytesIO()
+        doc.save(buf)
+        buf.seek(0)
+        return buf.getvalue()
+    except Exception as e:
+        print(f"Word RFP generation error: {e}")
+        return None
+
+def generate_pdf_rfp(data):
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    width, height = A4
+    c.setFont("Helvetica-Bold", 24)
+    c.setFillColor(HexColor("#0033A0"))
+    c.drawCentredString(width/2, height-80, "Winning RFP Response – Test Automation Services")
+    c.setFont("Helvetica", 14)
+    c.setFillColor(HexColor("#000000"))
+    y = height-120
+    if data.get("logo_path"):
+        try:
+            c.drawImage(ImageReader(data["logo_path"]), width/2-60, y-60, width=120, height=40, mask='auto')
+            y -= 50
+        except Exception:
+            pass
+    c.drawString(80, y, f"Client: {data['client_name']}")
+    y -= 25
+    c.drawString(80, y, f"Project: {data['project_name']}")
+    y -= 25
+    c.drawString(80, y, f"Prepared by: Cognizant Technology Solutions")
+    y -= 25
+    c.drawString(80, y, f"Date: {data['date']}")
+    c.showPage()
+    def section(title, content):
+        c.setFont("Helvetica-Bold", 16)
+        c.setFillColor(HexColor("#1565C0"))
+        c.drawString(60, height-80, title)
+        c.setFont("Helvetica", 12)
+        c.setFillColor(HexColor("#000000"))
+        text = c.beginText(60, height-110)
+        for line in content.split("\n"):
+            text.textLine(line)
+        c.drawText(text)
+        c.showPage()
+    section("1. Executive Summary", f"Cognizant proposes a robust test automation solution for {data['client_name']} ({data['project_name']}) to accelerate quality delivery, reduce manual effort, and enable faster releases. Our approach leverages proven frameworks, domain expertise, and AI-driven accelerators to maximize ROI and minimize risk.")
+    section("2. Scope of Testing", ", ".join(data['scope']))
+    section("3. Tools & Frameworks", ", ".join(data['tools']))
+    section("4. Estimations & Approach", f"Estimated Test Cases: {data['test_case_count']}\nAutomation Planned: {data['automation_percent']}%\nExecution Cycles per Sprint: {data['execution_cycles']}\nOur approach leverages industry best practices to maximize automation ROI and quality.")
+    section("5. Risks & Mitigation", data['risks'])
+    c.save()
+    buf.seek(0)
+    return buf.getvalue()
+
+def rfp_tab():
+    st.markdown("<div class='section-header'>📑 RFP Generator – Cognizant Branded</div>", unsafe_allow_html=True)
+    with st.form("rfp_form"):
+        client_name = st.text_input("Client Name")
+        project_name = st.text_input("Project Name")
+        scope = st.multiselect("Scope of Testing", ["Functional", "Regression", "API", "Performance", "Security"])
+        tools = st.multiselect("Tools & Frameworks", ["Selenium", "Playwright", "Cypress", "PyTest", "Appium", "JMeter", "ADF Testing"])
+        test_case_count = st.number_input("Estimated Test Case Count", min_value=1, value=100)
+        automation_percent = st.slider("Automation % Planned", 0, 100, value=70)
+        execution_cycles = st.number_input("Execution Cycles per Sprint", min_value=1, value=2)
+        st.markdown("**Complexity Split (% of Test Cases):**")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            simple_percent = st.slider("Simple %", 0, 100, value=40, key="simple_slider")
+        with col2:
+            medium_percent = st.slider("Medium %", 0, 100, value=40, key="medium_slider")
+        with col3:
+            complex_percent = st.slider("Complex %", 0, 100, value=20, key="complex_slider")
+        risks = st.text_area("Risks & Mitigation", height=100)
+        submitted = st.form_submit_button("Generate RFP")
+    if submitted:
+        percent_sum = simple_percent + medium_percent + complex_percent
+        if percent_sum != 100:
+            st.error(f"Complexity percentages must sum to 100%. Current sum: {percent_sum}")
+        else:
+            data = {
+                "client_name": client_name,
+                "project_name": project_name,
+                "scope": scope,
+                "tools": tools,
+                "test_case_count": test_case_count,
+                "automation_percent": automation_percent,
+                "execution_cycles": execution_cycles,
+                "simple_percent": simple_percent,
+                "medium_percent": medium_percent,
+                "complex_percent": complex_percent,
+                "risks": risks,
+                "date": datetime.now().strftime("%B %d, %Y"),
+                "logo_path": "assets/cognizant_logo.png" if os.path.exists("assets/cognizant_logo.png") else None
+            }
+            word_buf = generate_word_rfp(data)
+            pdf_buf = generate_pdf_rfp(data)
+            st.success("RFP documents generated!")
+            if word_buf is not None:
+                st.download_button(
+                    label="📥 Download RFP Document (Word)",
+                    data=word_buf,
+                    file_name=f"RFP_{client_name}_{project_name}.docx",
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                )
+            else:
+                st.error("Failed to generate Word document. Please check your input.")
+            if pdf_buf is not None:
+                st.download_button(
+                    label="📥 Download RFP Document (PDF)",
+                    data=pdf_buf,
+                    file_name=f"RFP_{client_name}_{project_name}.pdf",
+                    mime="application/pdf"
+                )
+            else:
+                st.error("Failed to generate PDF document. Please check your input.")
+
+
+
+
+with tab3:
+    # ...existing Output Files tab code...
+    # Ensure api_history.json is listed for download if it exists
+    import glob
+    st.markdown('<div class="section-header">📂 Output Files</div>', unsafe_allow_html=True)
+    output_files = []
+    for root, dirs, files in os.walk("output"):
+        for file in files:
+            output_files.append(os.path.join(root, file))
+    # Add api_history.json if present
+    if os.path.exists("api_history.json"):
+        output_files.append("api_history.json")
+    if output_files:
+        for file in output_files:
+            with open(file, "rb") as f:
+                st.download_button(f"Download {os.path.basename(file)}", f, file_name=os.path.basename(file))
+    else:
+        st.info("No output files available.")
+with tab5:
+    rfp_tab()
+with tab6:
+    api_helper_tab("api_helper_tab1")
+with tab4:
+    st.markdown("<div class='section-header'>📊 Pipeline ROI Calculator</div>", unsafe_allow_html=True)
+    st.markdown("""
+    Enter your pipeline and test parameters to estimate ROI from automation.
+    """, unsafe_allow_html=True)
+    with st.form("roi_form"):
+        test_count = st.number_input("Number of test cases", min_value=1, value=100)
+        simple_percent = st.number_input("Simple Test Cases (%)", min_value=0, max_value=100, value=40)
+        medium_percent = st.number_input("Medium Test Cases (%)", min_value=0, max_value=100, value=40)
+        complex_percent = st.number_input("Complex Test Cases (%)", min_value=0, max_value=100, value=20)
+        failed_cases = st.number_input("Number of Failed Test Cases", min_value=0, value=0)
+        pipeline_runs = st.number_input("Pipeline run frequency Per Release", min_value=1, value=5)
+        stability = st.selectbox("Application stability", ["Stable", "Medium", "High"], index=0)
+        cost_per_hour = st.number_input("Cost per hour ($)", min_value=1.0, value=50.0)
+        submitted = st.form_submit_button("Calculate ROI")
+
+    if submitted:
+        percent_sum = simple_percent + medium_percent + complex_percent
+        if percent_sum != 100:
+            st.error(f"Percentages must sum to 100%. Current sum: {percent_sum}")
+        else:
+            simple_count = int((test_count * simple_percent) / 100)
+            medium_count = int((test_count * medium_percent) / 100)
+            complex_count = test_count - (simple_count + medium_count)
+            avg_manual_time = (
+                (simple_count * 5) + (medium_count * 9) + (complex_count * 18)
+            ) / test_count if test_count > 0 else 0
+
+            # Split failed cases by complexity
+            failed_simple = int((failed_cases * simple_percent) / 100)
+            failed_medium = int((failed_cases * medium_percent) / 100)
+            failed_complex = failed_cases - (failed_simple + failed_medium)
+
+            # Dynamic maintenance effort calculation
+            maintenance_effort = (
+                (failed_simple * 0.25) +
+                (failed_medium * 0.5) +
+                (failed_complex * 1.0)
+            )
+
+            st.write(f"**Simple Test Cases:** {simple_count}")
+            st.write(f"**Medium Test Cases:** {medium_count}")
+            st.write(f"**Complex Test Cases:** {complex_count}")
+            st.write(f"**Average manual execution time per test (mins):** {avg_manual_time:.2f}")
+            st.write(f"**Failed Simple Test Cases:** {failed_simple}")
+            st.write(f"**Failed Medium Test Cases:** {failed_medium}")
+            st.write(f"**Failed Complex Test Cases:** {failed_complex}")
+
+            # 1. Manual effort
+            manual_effort = (avg_manual_time / 60) * test_count * pipeline_runs
+
+            # 2. Monitoring time per run (hrs)
+            if test_count < 1000:
+                monitoring_effort = 8 * pipeline_runs     # 30 min/run
+            elif test_count <= 3000:
+                monitoring_effort = 16 * pipeline_runs    # 45 min/run
+            elif test_count <= 6000:
+                monitoring_effort = 24 * pipeline_runs     # 1.5 hrs/run
+            else:
+                monitoring_effort = 40 * pipeline_runs     # 2 hrs/run (safe for very large suites)
+
+            # 4. Automation effort
+            automation_effort = monitoring_effort + maintenance_effort
+
+            # 5. Savings
+            effort_saved = manual_effort - automation_effort
+            effort_saved_days = effort_saved / 8
+            cost_saved = effort_saved * cost_per_hour
+
+            st.metric("Manual Effort (hrs)", f"{manual_effort:.2f}")
+            st.metric("Automation Effort (hrs) [Monitoring + Maintenance] ", f"{automation_effort:.2f}")
+            st.metric("Effort Saved (hrs)", f"{effort_saved:.2f}")
+            st.metric("Effort Saved (days)", f"{effort_saved_days:.2f}")
+            st.metric("Cost Saved ($)", f"{cost_saved:.2f}")
+
+            import pandas as pd
+            import plotly.express as px
+            df = pd.DataFrame({
+                "Effort": ["Manual", "Automation"],
+                "Hours": [manual_effort, automation_effort]
+            })
+            fig = px.bar(df, x="Effort", y="Hours", color="Effort", title="Effort Comparison")
+            st.plotly_chart(fig, use_container_width=True)
+
+with tab1:
+    st.markdown('<div class="section-header">📌 Upload Requirement</div>', unsafe_allow_html=True)
+    with st.container():
+        uploaded_file = st.file_uploader("Upload Requirement File (.txt)", type=["txt"])
+        pasted_text = st.text_area("Or paste requirement text", "", height=120)
+        requirement_text = None
+        if uploaded_file:
+            requirement_text = uploaded_file.read().decode("utf-8")
+        elif pasted_text.strip():
+            requirement_text = pasted_text.strip()
+
+        with st.expander("Feature & Step Generation", expanded=True):
+            cols = st.columns(2)
+            with cols[0]:
+                if st.button("Generate Feature File", key="feat_btn", help="Generate feature file"):
+                    if requirement_text:
+                        with st.spinner("Generating feature file..."):
+                            feature_content = generate_feature_file(requirement_text)
+                            feature_path = "output/features/generated.feature"
+                            os.makedirs(os.path.dirname(feature_path), exist_ok=True)
+                            with open(feature_path, "w") as f:
+                                f.write(feature_content)
+                            st.session_state.generated_feature = feature_content
+                            st.success("✅ Feature file created!")
+                            st.text_area("📄 Feature File", feature_content, height=300)
+                            st.download_button("Download Feature File (.txt)", feature_content, file_name="generated.feature.txt", mime="text/plain")
+                    else:
+                        st.warning("Please upload a requirement file or paste requirement text.")
+            with cols[1]:
+                frameworks = [
+                    ("Generate Step Definitions (Selenium - Java)", "selenium_java"),
+                    ("Generate Step Definitions (Selenium - Python)", "selenium_python"),
+                    ("Generate Step Definitions (Playwright - Python)", "playwright_python")
+                ]
+                for label, fw in frameworks:
+                    if st.button(label, key=f"step_btn_{fw}"):
+                        step_input = st.session_state.get("generated_feature")
+                        if not step_input:
+                            step_input = requirement_text
+                        if step_input:
+                            from script_generator import generate_script_structure
+                            with st.spinner(f"Generating step definitions for {fw.replace('_', ' ').title()}..."):
+                                try:
+                                    result = generate_script_structure(step_input, framework=fw)
+                                    file_name = list(result["files_to_create"].keys())[0]
+                                    step_defs = result["files_to_create"][file_name]
+                                    step_path = f"output/scripts/steps/step_definitions_{fw}.py"
+                                    os.makedirs(os.path.dirname(step_path), exist_ok=True)
+                                    with open(step_path, "w") as f:
+                                        f.write(step_defs)
+                                    st.success(f"✅ Step definitions created for {fw.replace('_', ' ').title()}!")
+                                    st.text_area(f"🧾 Step Definitions ({fw.replace('_', ' ').title()})", step_defs, height=300)
+                                    st.download_button(f"Download Step Definitions ({fw.replace('_', ' ').title()}) (.txt)", step_defs, file_name=f"step_definitions_{fw}.txt", mime="text/plain")
+                                except ValueError as ve:
+                                    st.warning(str(ve))
+                        else:
+                            st.warning("Please generate a Feature File or upload/paste requirement text.")
+
+
+
+# Helper for RFP Generator tab
+def generate_rfp_doc(doc):
+    import io
+    buf = io.BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+    return buf.getvalue()
+
+with tab2:
+    st.markdown('<div class="section-header">🧪 XPath Extractor</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div style='color:#1565C0;font-size:1.05rem;'>Enter a URL to extract all interactive elements and their robust relative XPaths. Results are shown in a searchable table, with copy/download options.</div>
+    """, unsafe_allow_html=True)
+    with st.container():
+        xpath_url = st.text_input("Enter URL to extract XPaths", key="xpath_url")
+        extraction_mode = st.radio("Extraction Mode", ["Extract All Elements", "Extract Only Important Elements"], index=1)
+        cols = st.columns([2,2,2,2])
+        extract_btn = None
+        search = None
+        fmt = None
+        download_btn = None
+        with cols[0]:
+            extract_btn = st.button("Extract XPaths", key="extract_btn")
+        with cols[1]:
+            search = st.text_input("Search/filter elements", key="search_xpath")
+        with cols[2]:
+            fmt = st.selectbox("Download format", ["CSV", "JSON"], key="xpath_fmt")
+        with cols[3]:
+            download_btn = st.button("Download Results", key="download_xpath")
+
+        import pandas as pd
+        import importlib.util
+        from io import StringIO
+
+        if st.session_state.get('xpath_df') is not None:
+            df = st.session_state['xpath_df']
+            driver = st.session_state.get('driver', None)
+            expanded_img = st.session_state.get('expanded_img', None)
+            # Only filter/search, do not re-extract
+            if search:
+                mask = df.apply(lambda row: search.lower() in str(row['tag']).lower() or search.lower() in str(row['xpath']).lower() or search.lower() in str(row['text']).lower(), axis=1)
+                df = df[mask]
+
+            # Styled table header
+            st.markdown('<table class="xpath-table"><thead><tr>'
+                        '<th>Thumbnail</th><th>Tag</th><th>XPath</th><th>Text</th><th>Copy</th><th>Highlight</th>'
+                        '</tr></thead><tbody>', unsafe_allow_html=True)
+            for i, row in df.iterrows():
+                thumb_img = f'<img src="data:image/png;base64,{row["thumbnail_b64"]}" width="40" style="border:1px solid #ccc;border-radius:4px;vertical-align:middle;">'
+                copy_btn_html = f'<button class="blue-btn" onclick="navigator.clipboard.writeText(\'{row["xpath"]}\')">Copy</button>'
+                highlight_btn = st.button("Highlight", key=f"highlight_{i}")
+                st.markdown(f'<tr>'
+                            f'<td>{thumb_img}</td>'
+                            f'<td>{row["tag"]}</td>'
+                            f'<td style="font-family:monospace;">{row["xpath"]}</td>'
+                            f'<td>{row["text"]}</td>'
+                            f'<td>{copy_btn_html}</td>'
+                            f'<td>{"✅" if highlight_btn else ""}</td>'
+                            f'</tr>', unsafe_allow_html=True)
+                if highlight_btn and driver:
+                    try:
+                        from selenium.webdriver.common.by import By
+                        el = driver.find_element(By.XPATH, row['xpath'])
+                        driver.execute_script("arguments[0].style.transition='box-shadow 0.3s'; arguments[0].style.boxShadow='0 0 0 4px yellow';", el)
+                        time.sleep(2)
+                        driver.execute_script("arguments[0].style.boxShadow='';", el)
+                        st.success("Element highlighted in browser!")
+                    except Exception as e:
+                        st.warning(f"Highlight failed: {e}")
+            st.markdown('</tbody></table>', unsafe_allow_html=True)
+
+            # Download options
+            if download_btn:
+                if fmt == "CSV":
+                    csv = df.drop(['thumbnail_b64', 'screenshot_path', 'element_index'], axis=1).to_csv(index=False)
+                    st.download_button("Download CSV", csv, file_name="xpaths.csv")
+                else:
+                    json_str = df.drop(['thumbnail_b64', 'screenshot_path', 'element_index'], axis=1).to_json(orient="records", indent=2)
+                    st.download_button("Download JSON", json_str, file_name="xpaths.json")
+
+        # Extraction logic
+        if extract_btn and xpath_url:
+            with st.spinner("Extracting XPaths from page. Please wait..."):
+                spec = importlib.util.spec_from_file_location("xpath_extractor", "xpath_extractor.py")
+                xpath_extractor = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(xpath_extractor)
+                try:
+                    # Only start browser and extract if button pressed
+                    if 'driver' not in st.session_state or st.session_state.get('driver_url') != xpath_url:
+                        driver = xpath_extractor.start_browser(xpath_url)
+                        st.session_state['driver'] = driver
+                        st.session_state['driver_url'] = xpath_url
+                    else:
+                        driver = st.session_state['driver']
+                    important_only = extraction_mode == "Extract Only Important Elements"
+                    results = xpath_extractor.extract_xpaths(xpath_url, important_only=important_only)
+                    df = pd.DataFrame(results)
+                    st.session_state['xpath_df'] = df
+                    st.session_state['expanded_img'] = None
+                    st.success(f"Extracted {len(df)} elements.")
+                except Exception as e:
+                    st.error(f"Error extracting XPaths: {e}")

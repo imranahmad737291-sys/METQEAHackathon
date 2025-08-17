@@ -1,0 +1,23 @@
+.xpath-popup {
+    position: absolute;
+    background: #f8f9fa;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-family: monospace;
+    font-size: 12px;
+    color: #333;
+    z-index: 10000;
+    box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.2);
+  }
+  
+  .xpath-popup button {
+    margin-top: 5px;
+    padding: 4px 8px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
