@@ -689,11 +689,23 @@ def generate_word_rfp(data):
             "Our proposed solution architecture is based on a modular, scalable automation framework that integrates seamlessly with CI/CD pipelines. "
             "It supports cross-browser testing, mobile automation, API validation, and performance testing, ensuring a holistic quality assurance approach."
         )
-        # Insert diagram if available
-        try:
-            doc.add_picture("assets/test-automation-framework.png", width=Inches(5))
-        except Exception:
-            pass
+        # Insert multiple diagrams if available
+        image_files = [
+            "assets/diagram1.png",
+            "assets/diagram2.png",
+            "assets/diagram3.png",
+            "assets/diagram4.png"
+        ]
+        # Set image width to nearly full page (A4 width is ~8.27 inches, minus margins)
+        full_width = Inches(6.5)  # Adjust as needed for your page margins
+        for img_path in image_files:
+            try:
+                para = doc.add_paragraph()
+                run = para.add_run()
+                run.add_picture(img_path, width=full_width)
+                para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+            except Exception as e:
+                print(f"Could not add image {img_path}: {e}")
 
         heading = doc.add_heading("Quality Assurance & Governance", level=1)
         for run in heading.runs:
