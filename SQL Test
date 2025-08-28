@@ -1,0 +1,29 @@
+List employee names, department names, and project names for employees working in the IT department.
+
+Show employee names and project names for projects located in New York
+
+Show all departments and their employees, even if some departments don’t have employees.
+
+List employee names and project names where department is Finance and project name starts with 'A'.
+
+Show each department name and the count of employees in it
+
+With these 5 tests, i ’ll validate:
+
+✅ Multi-table joins
+
+✅ Filters with conditions
+
+✅ LEFT JOIN handling
+
+✅ Pattern matching (LIKE)
+
+✅ Aggregation + GROUP BY
+
+Show employee names, department names, project names, and city for employees working on projects in the IT department located in New York.
+
+List employees working on projects with budget > 1,000,000 and belonging to departments outside the USA.
+
+Find all employees working on projects in Finance or HR departments, who are based in London, and show their project names
+
+
